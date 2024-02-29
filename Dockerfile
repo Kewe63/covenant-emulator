@@ -6,11 +6,11 @@ ARG VERSION="HEAD"
 # Use muslc for static libs
 ARG BUILD_TAGS="muslc"
 
-
-RUN apk add --no-cache --update openssh git make build-base linux-headers libc-dev \
-                                pkgconfig zeromq-dev musl-dev alpine-sdk libsodium-dev \
-                                libzmq-static libsodium-static gcc
-
+RUN apk add --no-cache --update \
+    openssh git make build-base linux-headers libc-dev \
+    pkgconfig zeromq-dev musl-dev alpine-sdk libsodium-dev \
+    libzmq-static libsodium-static gcc && \
+    rm -rf /var/cache/apk/*
 
 # Build
 WORKDIR /go/src/github.com/babylonchain/covenant-emulator
@@ -37,9 +37,10 @@ RUN CGO_LDFLAGS="$CGO_LDFLAGS -lstdc++ -lm -lsodium" \
 # FINAL IMAGE
 FROM alpine:3.16 AS run
 
-RUN addgroup --gid 1138 -S covenant-emulator && adduser --uid 1138 -S covenant-emulator -G covenant-emulator
-
-RUN apk add bash curl jq
+RUN addgroup --gid 1138 -S covenant-emulator && \
+    adduser --uid 1138 -S covenant-emulator -G covenant-emulator && \
+    apk add --no-cache bash curl jq && \
+    rm -rf /var/cache/apk/*
 
 COPY --from=builder /go/src/github.com/babylonchain/covenant-emulator/build/covd /bin/covd
 
